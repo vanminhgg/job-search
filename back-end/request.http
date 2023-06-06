@@ -1,0 +1,21 @@
+GET http://localhost:5000/api/search/count
+
+###
+GET http://localhost:8000/api/index
+
+###
+POST http://localhost:8000/api/search/senior
+Content-Type: application/json
+
+{
+    
+    "page": 1,
+    "fromDate": "2023-05-18",
+    "toDate": "2023-05-22",
+    "minSalary": 1,
+    "maxSalary": 5000,
+    "location": ["Hồ Chí Minh", "Hà Nội"],
+    "benefits": [
+          "Thưởng",
+        ],
+}
