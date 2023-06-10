@@ -34,6 +34,10 @@ exports.indexData = async (req, res) => {
         sortSalary: salaryValue,
         benefits: results.benefits,
         url: results.url,
+        level: results.level,
+        category: results.category,
+        skill: results.skill,
+        profileLanguage: results.profileLanguage,
         description: results.description,
       }),
         await client.index({
@@ -51,6 +55,8 @@ exports.indexData = async (req, res) => {
 exports.search = async (req, res) => {
   const benefits = req.body.benefits;
   const location = req.body.location;
+  const categories = req.body.categories;
+  const level = req.body.level;
   const fromDate = req.body.fromDate;
   const toDate = req.body.toDate;
   const minSalary = req.body.minSalary;
@@ -62,7 +68,6 @@ exports.search = async (req, res) => {
   if (page) {
     curPage = page;
   }
-  console.log(curPage);
 
   let startDate = new Date("1999-01-01");
   let endDate = new Date(Date.now());
@@ -72,7 +77,6 @@ exports.search = async (req, res) => {
   if (toDate) {
     endDate = new Date(toDate);
   }
-  console.log(endDate);
   let sort = [];
 
   if (sortType) {
@@ -110,18 +114,13 @@ exports.search = async (req, res) => {
         bool: {
           must: [
             {
-              match: {
-                title: keyWord,
+              multi_match: {
+                query: keyWord,
+                fields: ["title^4", "category^3", "skill^2", "description^1"],
               },
             },
           ],
-          should: [
-            {
-              match: {
-                title: keyWord,
-              },
-            },
-          ],
+          should: [],
           filter: [
             {
               range: {
@@ -148,26 +147,50 @@ exports.search = async (req, res) => {
     },
   };
 
-  if (benefits) {
-    benefits.forEach((item) => {
-      objectSearch.body.query.bool.must.push({
-        match: {
-          benefits: item,
-        },
-      });
+  if (location) {
+    objectSearch.body.query.bool.filter.push({
+      bool: {
+        should: location.map((item) => ({
+          match: {
+            location: item,
+          },
+        })),
+        minimum_should_match: 1,
+      },
     });
   }
-  if (location) {
-    location.forEach((item) => {
-      objectSearch.body.query.bool.must.push({
-        match: {
-          location: item,
-        },
-      });
+  if (benefits) {
+    objectSearch.body.query.bool.filter.push({
+      bool: {
+        should: benefits.map((item) => ({
+          match: {
+            benefits: item,
+          },
+        })),
+        minimum_should_match: 1,
+      },
+    });
+  }
+  if (categories) {
+    objectSearch.body.query.bool.filter.push({
+      bool: {
+        should: categories.map((item) => ({
+          match: {
+            category: item,
+          },
+        })),
+        minimum_should_match: 1,
+      },
+    });
+  }
+  if (level) {
+    objectSearch.body.query.bool.must.push({
+      match: {
+        level: level,
+      },
     });
   }
   const body = await client.search(objectSearch);
-
   res.json({
     count: body.hits.total.value,
     data: body.hits.hits,
@@ -233,6 +256,92 @@ exports.getAllLocations = async (req, res) => {
     res.json(distinctLocations);
   } catch (error) {
     console.error("Error retrieving locations:", error);
+    res.json([]);
+  }
+};
+exports.getAllSkill = async (req, res) => {
+  try {
+    const response = await client.search({
+      index: "job",
+      body: {
+        aggs: {
+          skills: {
+            terms: {
+              field: "skill.keyword",
+              size: 100,
+            },
+          },
+        },
+        size: 0,
+      },
+    });
+
+    console.log(response);
+    const skill = response.aggregations.skills.buckets.map(
+      (bucket) => bucket.key
+    );
+
+    res.json(skill);
+  } catch (error) {
+    console.error("Error retrieving benefits:", error);
+    res.json([]);
+  }
+};
+
+exports.getAllCategory = async (req, res) => {
+  try {
+    const response = await client.search({
+      index: "job",
+      body: {
+        aggs: {
+          categories: {
+            terms: {
+              field: "category.keyword",
+              size: 100,
+            },
+          },
+        },
+        size: 0,
+      },
+    });
+
+    console.log(response);
+    const category = response.aggregations.categories.buckets.map(
+      (bucket) => bucket.key
+    );
+
+    res.json(category);
+  } catch (error) {
+    console.error("Error retrieving benefits:", error);
+    res.json([]);
+  }
+};
+
+exports.getAllLevel = async (req, res) => {
+  try {
+    const response = await client.search({
+      index: "job",
+      body: {
+        aggs: {
+          levels: {
+            terms: {
+              field: "level.keyword",
+              size: 100,
+            },
+          },
+        },
+        size: 0,
+      },
+    });
+
+    console.log(response);
+    const level = response.aggregations.levels.buckets.map(
+      (bucket) => bucket.key
+    );
+
+    res.json(level);
+  } catch (error) {
+    console.error("Error retrieving benefits:", error);
     res.json([]);
   }
 };
