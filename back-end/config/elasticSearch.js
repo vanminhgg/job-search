@@ -6,7 +6,7 @@ const client = new Client({
   node: "https://localhost:9200",
   auth: {
     username: "elastic",
-    password: process.env.pass,
+    password: "bsrSQkY2Y+DTscdWW36w",
   },
   tls: {
     rejectUnauthorized: false,

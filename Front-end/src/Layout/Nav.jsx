@@ -35,6 +35,9 @@ const NavBox = styled("div")(({ theme }) => ({
 export default function Nav() {
     const [locations, setLocations] = useState([]);
     const [benefits, setBenefits] = useState([]);
+    const [level, setLevel] = useState([]);
+    const [category, setCategory] = useState([]);
+  
     const [sort, setSort] = useState("");
     const [sortOrder, setSortOrder] = useState("asc");
     const search = useSearch();
@@ -46,23 +49,26 @@ export default function Nav() {
             setSort(event.target.value !== sort ? event.target.value : "");
         }
     };
-    const handleSortOrder = (event) => {
-        setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+
+    const handleSortOrder = () => {
+        setSortOrder((prevSortOrder) =>
+            prevSortOrder === "asc" ? "desc" : "asc"
+        );
     };
+
     useEffect(() => {
         if (!sort) {
             search.setParams("sortType", null);
             return;
         }
         search.setParams("sortType", sortOrder.concat(sort));
-        console.log(sortOrder.concat(sort));
+       
         return () => search.setParams("sortType", null);
     }, [sort, sortOrder]);
 
     useEffect(() => {
         const fetchData = async () => {
             const locationList = await search.getAllLocations();
-            console.log(locationList);
             setLocations(locationList);
         };
         fetchData();
@@ -80,6 +86,31 @@ export default function Nav() {
             setBenefits([]);
         };
     }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const levels = await search.getAllLevels();
+          
+            setLevel(levels);
+        };
+        fetchData();
+        return () => {
+            setLevel([]);
+        };
+    }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setCategory(await search.getAllCategories());
+        };
+        fetchData();
+        
+        return () => {
+            setCategory([]);
+        };
+    }, []);
+
+  
 
     return (
         <NavBox>
@@ -127,13 +158,12 @@ export default function Nav() {
                         <NumericInput
                             label="Lương tối đa"
                             value={search.searchParams.maxSalary}
-                            onChange={(value) => {
+                            onChange={(value) =>
                                 search.setParams(
                                     "maxSalary",
                                     value ? Number(value) : null
-                                );
-                                console.log(value);
-                            }}
+                                )
+                            }
                         />
                     </ListItem>
                     <Typography color="primary" variant="h5">
@@ -209,6 +239,45 @@ export default function Nav() {
                             )}
                         />
                     </ListItem>
+                    <ListItem>
+                        <Autocomplete
+                            sx={{ width: "100%" }}
+                            
+                            options={level}
+                            value={search.searchParams.level}
+                            filterSelectedOptions
+                            onChange={(_, value) =>
+                                search.setParams("level", value)
+                            }
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Cấp độ"
+                                    placeholder="Cấp độ"
+                                />
+                            )}
+                        />
+                    </ListItem>
+                    <ListItem>
+                        <Autocomplete
+                            sx={{ width: "100%" }}
+                            multiple
+                            options={category}
+                            value={search.searchParams.category}
+                            filterSelectedOptions
+                            onChange={(_, value) =>
+                                search.setParams("categories", value)
+                            }
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Danh mục"
+                                    placeholder="Danh mục"
+                                />
+                            )}
+                        />
+                    </ListItem>
+                    
                 </LocalizationProvider>
             </MenuList>
         </NavBox>
@@ -237,7 +306,7 @@ export function NumericInput({ onChange, value, label, placeholder }) {
             sx={{ width: "100%" }}
             label={label}
             type="number"
-            value={inputValue}
+            value={inputValue??""}
             onChange={handleChange}
             placeholder={placeholder}
         />

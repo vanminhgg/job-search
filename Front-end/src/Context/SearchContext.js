@@ -1,29 +1,62 @@
+import React, { createContext, useState } from "react";
 import { config } from "../Config/config";
-
-const { createContext, useState, Children } = require("react");
 
 export const SearchContext = createContext({});
 
 export default function SearchContextProvider({ children }) {
-    const initialSearchParams = {
+    /**
+     * @typedef {Object} JobObject
+     * @property {string[]} benefits 
+     * @property {string[]} location 
+     * @property {string[]} categories
+     * @property {string} level
+     * @property {Date} fromDate 
+     * @property {string} toDate 
+     * @property {number} minSalary 
+     * @property {number} maxSalary
+     * @property {number} page
+     * @property {string} sortType
+     */
+
+    const initialJobObject = {
         benefits: [],
         location: [],
+        categories: [],
+        level: null,
         fromDate: null,
         toDate: null,
         minSalary: null,
         maxSalary: null,
-        page: 1,
+        page: 0,
         sortType: "",
     };
 
-    const [searchParams, setSearchParams] = useState(initialSearchParams);
+    const [searchParams, setSearchParams] = useState(
+        /** @type {JobObject} */ (initialJobObject)
+    );
 
     const getAllLocations = async () => {
         const response = await fetch(config.apiUrl.concat(config.location));
         return await response.json();
     };
+
     const getAllBenefits = async () => {
         const response = await fetch(config.apiUrl.concat(config.benefit));
+        return await response.json();
+    };
+
+    const getAllLevels = async () => {
+        const response = await fetch(config.apiUrl.concat(config.level));
+        return await response.json();
+    };
+
+    const getAllCategories = async () => {
+        const response = await fetch(config.apiUrl.concat(config.category));
+        return await response.json();
+    };
+
+    const getAllSkills = async () => {
+        const response = await fetch(config.apiUrl.concat(config.skill));
         return await response.json();
     };
 
@@ -46,7 +79,7 @@ export default function SearchContextProvider({ children }) {
             }
         );
         console.log(searchParams);
-       
+
         return await response.json();
     };
 
@@ -55,6 +88,9 @@ export default function SearchContextProvider({ children }) {
         searchParams,
         getAllBenefits,
         getAllLocations,
+        getAllLevels,
+        getAllCategories,
+        getAllSkills,
         setParams,
     };
 

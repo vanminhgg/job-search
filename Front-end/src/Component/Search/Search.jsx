@@ -43,11 +43,13 @@ export default function Search() {
             const results = await search.search(keyword);
             setLoading(false);
             setCount(results.count);
+            console.log(results)
             setPageNumber(Math.ceil(results.count / 9));
-            setData(results.data);
+            setData(results.data.map((d) => d._source));
         };
 
         fetchData();
+        
     }, [keyword, search.searchParams]);
 
     const searhReult = () => {

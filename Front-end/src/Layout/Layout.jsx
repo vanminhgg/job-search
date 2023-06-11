@@ -44,6 +44,7 @@ const AppLayout = styled("div")(({ theme }) => ({
                `,
     gridTemplateRows: "auto 1fr auto",
     gridTemplateColumns: "auto 1fr auto",
+    position: "relative",
     backgroundImage: "url(/background.jpg)",
 }));
 
